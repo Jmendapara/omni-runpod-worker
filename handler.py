@@ -400,10 +400,53 @@ def get_file_data(filename, subfolder, file_type):
         return None
 
 
+def _convert_flac_to_wav(file_bytes, filename):
+    """
+    Convert FLAC audio bytes to WAV using ffmpeg.
+    Returns (wav_bytes, new_filename) or (original_bytes, original_filename) on failure.
+    """
+    import subprocess
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".flac", delete=False) as flac_tmp:
+            flac_tmp.write(file_bytes)
+            flac_path = flac_tmp.name
+
+        wav_path = flac_path.replace(".flac", ".wav")
+        result = subprocess.run(
+            ["ffmpeg", "-y", "-i", flac_path, "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "1", wav_path],
+            capture_output=True, timeout=60,
+        )
+
+        os.remove(flac_path)
+
+        if result.returncode != 0:
+            stderr_text = result.stderr.decode("utf-8", errors="replace")[-500:]
+            print(f"worker-comfyui - ffmpeg FLAC→WAV failed (code {result.returncode}): {stderr_text}")
+            if os.path.exists(wav_path):
+                os.remove(wav_path)
+            return file_bytes, filename
+
+        with open(wav_path, "rb") as f:
+            wav_bytes = f.read()
+        os.remove(wav_path)
+
+        new_filename = os.path.splitext(filename)[0] + ".wav"
+        print(f"worker-comfyui - Converted {filename} FLAC→WAV ({len(file_bytes)} → {len(wav_bytes)} bytes)")
+        return wav_bytes, new_filename
+
+    except Exception as e:
+        print(f"worker-comfyui - FLAC→WAV conversion error: {e}")
+        for p in [flac_path, wav_path] if "wav_path" in dir() else [flac_path] if "flac_path" in dir() else []:
+            if os.path.exists(p):
+                os.remove(p)
+        return file_bytes, filename
+
+
 def _process_output_file(filename, subfolder, file_type, job_id, output_list, errors):
     """
     Fetch a single output file from ComfyUI and append it to output_list
-    as either base64 data or an S3 URL.
+    as either base64 data or an S3 URL. FLAC audio is converted to WAV first.
     """
     if file_type == "temp":
         print(f"worker-comfyui - Skipping {filename} because type is 'temp'")
@@ -419,6 +462,10 @@ def _process_output_file(filename, subfolder, file_type, job_id, output_list, er
 
     if file_bytes:
         file_extension = os.path.splitext(filename)[1] or ".bin"
+
+        if file_extension.lower() == ".flac":
+            file_bytes, filename = _convert_flac_to_wav(file_bytes, filename)
+            file_extension = os.path.splitext(filename)[1] or ".wav"
 
         if os.environ.get("BUCKET_ENDPOINT_URL"):
             try:
