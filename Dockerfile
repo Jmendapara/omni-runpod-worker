@@ -103,19 +103,22 @@ WORKDIR /comfyui
 
 RUN mkdir -p models/omnivoice models/audio_encoders
 
-RUN uv pip install "huggingface_hub[hf_xet]"
-
 RUN if [ "$MODEL_TYPE" = "omnivoice-bf16" ]; then \
+      uv pip install "huggingface_hub[hf_xet]" && \
       python3 -c "from huggingface_hub import snapshot_download; snapshot_download('drbaph/OmniVoice-bf16', local_dir='/comfyui/models/omnivoice/OmniVoice-bf16')" && \
-      rm -rf /root/.cache/huggingface /tmp/hf_xet* /tmp/tmp*; \
+      rm -rf /root/.cache/huggingface /tmp/hf_xet* /tmp/tmp* && \
+      uv cache clean; \
     fi
 
 RUN if [ "$MODEL_TYPE" = "omnivoice-fp32" ]; then \
+      uv pip install "huggingface_hub[hf_xet]" && \
       python3 -c "from huggingface_hub import snapshot_download; snapshot_download('k2-fsa/OmniVoice', local_dir='/comfyui/models/omnivoice/OmniVoice')" && \
-      rm -rf /root/.cache/huggingface /tmp/hf_xet* /tmp/tmp*; \
+      rm -rf /root/.cache/huggingface /tmp/hf_xet* /tmp/tmp* && \
+      uv cache clean; \
     fi
 
-RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download('openai/whisper-large-v3-turbo', local_dir='/comfyui/models/audio_encoders/openai_whisper-large-v3-turbo')" && \
+RUN uv pip install "huggingface_hub[hf_xet]" && \
+    python3 -c "from huggingface_hub import snapshot_download; snapshot_download('openai/whisper-large-v3-turbo', local_dir='/comfyui/models/audio_encoders/openai_whisper-large-v3-turbo')" && \
     rm -rf /root/.cache/huggingface /tmp/hf_xet* /tmp/tmp* && \
     uv cache clean
 
