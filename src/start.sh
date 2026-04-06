@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Activate the Python virtual environment
+export VIRTUAL_ENV="/opt/venv"
+export PATH="/opt/venv/bin:${PATH}"
+
 # Use libtcmalloc for better memory management
 TCMALLOC="$(ldconfig -p | grep -Po "libtcmalloc.so.\d" | head -n 1)"
 export LD_PRELOAD="${TCMALLOC}"
@@ -18,6 +22,7 @@ echo "  /runpod-volume exists: $([ -d /runpod-volume ] && echo YES || echo NO)"
 echo "  /runpod-volume/models exists: $([ -d /runpod-volume/models ] && echo YES || echo NO)"
 
 # ---------- Pre-launch diagnostics ----------
+echo "worker-comfyui: Python: $(which python) ($(python --version 2>&1))"
 echo "worker-comfyui: System info before launch:"
 echo "  GPU(s):"
 nvidia-smi --query-gpu=gpu_name,memory.total,driver_version,compute_cap --format=csv,noheader 2>/dev/null \

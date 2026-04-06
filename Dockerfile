@@ -37,6 +37,7 @@ RUN wget -qO- https://astral.sh/uv/install.sh | sh \
     && ln -s /root/.local/bin/uvx /usr/local/bin/uvx \
     && uv venv /opt/venv
 
+ENV VIRTUAL_ENV="/opt/venv"
 ENV PATH="/opt/venv/bin:${PATH}"
 
 RUN uv pip install comfy-cli pip setuptools wheel
@@ -72,8 +73,8 @@ WORKDIR /comfyui
 RUN comfy-node-install https://github.com/Saganaki22/ComfyUI-OmniVoice-TTS
 
 # Install OmniVoice dependencies carefully to avoid breaking PyTorch
-RUN uv pip install omnivoice --no-deps && \
-    uv pip install \
+RUN /opt/venv/bin/pip install omnivoice --no-deps && \
+    /opt/venv/bin/pip install \
     pydub \
     soundfile \
     scipy \
@@ -83,8 +84,10 @@ RUN uv pip install omnivoice --no-deps && \
     jieba \
     soxr \
     "transformers>=5.3.0" && \
-    rm -rf /root/.cache/pip /root/.cache/uv /tmp/* && \
-    uv cache clean
+    rm -rf /root/.cache/pip /root/.cache/uv /tmp/*
+
+# Verify critical packages are importable
+RUN /opt/venv/bin/python -c "from PIL import Image; import torch; import omnivoice; print('Verification OK: PIL, torch, omnivoice all importable')"
 
 WORKDIR /
 
