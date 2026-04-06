@@ -8,24 +8,20 @@ set -euo pipefail
 #   curl -fsSL https://raw.githubusercontent.com/Jmendapara/omni-runpod-worker/main/scripts/setup-pod.sh | bash
 # =============================================================================
 
+# Use python3 explicitly (python may not exist on slim pods)
+PY="$(command -v python3 || command -v python)"
+PIP="$(command -v pip3 || command -v pip)"
+
 echo "=========================================="
 echo "  OmniVoice RunPod Setup Script"
 echo "=========================================="
-
-# Ensure 'python' command exists
-if ! command -v python &>/dev/null; then
-    if command -v python3 &>/dev/null; then
-        ln -sf "$(which python3)" /usr/local/bin/python
-        echo "Created python -> python3 symlink"
-    fi
-fi
 
 # ---------- Step 0: System info ----------
 echo ""
 echo "[0/7] System info..."
 nvidia-smi --query-gpu=gpu_name,memory.total,driver_version --format=csv,noheader 2>/dev/null || echo "  (no GPU detected)"
-python --version 2>/dev/null || echo "  (no python)"
-python -c "import torch; print(f'  torch {torch.__version__}, CUDA: {torch.cuda.is_available()}')" 2>/dev/null || echo "  torch: not yet installed"
+echo "  Python: $PY ($($PY --version 2>&1))"
+$PY -c "import torch; print(f'  torch {torch.__version__}, CUDA: {torch.cuda.is_available()}')" 2>/dev/null || echo "  torch: not yet installed"
 
 # ---------- Step 1: Install system deps ----------
 echo ""
@@ -40,14 +36,16 @@ if [ ! -d /workspace/ComfyUI ]; then
     cd /workspace
     git clone https://github.com/comfyanonymous/ComfyUI.git
     cd ComfyUI
-    pip install -r requirements.txt -q
+    $PIP install -r requirements.txt -q
 else
     echo "  ComfyUI already exists at /workspace/ComfyUI"
     cd /workspace/ComfyUI
+    echo "  Ensuring ComfyUI requirements are installed..."
+    $PIP install -r requirements.txt -q
 fi
 
 echo "  Verifying torch after ComfyUI install..."
-python -c "import torch; print(f'  torch {torch.__version__}, CUDA: {torch.cuda.is_available()}')" 2>/dev/null || echo "  WARNING: torch still not available"
+$PY -c "import torch; print(f'  torch {torch.__version__}, CUDA: {torch.cuda.is_available()}')" 2>/dev/null || echo "  WARNING: torch still not available"
 
 # ---------- Step 3: Install OmniVoice custom node ----------
 echo ""
@@ -63,15 +61,15 @@ fi
 # ---------- Step 4: Install OmniVoice Python deps ----------
 echo ""
 echo "[4/7] Installing OmniVoice Python dependencies..."
-pip install omnivoice --no-deps -q
-pip install pydub soundfile scipy lazy_loader librosa sentencepiece jieba soxr -q
-pip install "transformers>=5.3.0" -q
+$PIP install omnivoice --no-deps -q
+$PIP install pydub soundfile scipy lazy_loader librosa sentencepiece jieba soxr -q
+$PIP install "transformers>=5.3.0" -q
 echo "  Done."
 
 # ---------- Step 5: Verify packages ----------
 echo ""
 echo "[5/7] Verifying packages..."
-python -c "
+$PY -c "
 import sys
 print(f'Python: {sys.executable} ({sys.version})')
 checks = {
@@ -101,8 +99,8 @@ mkdir -p /workspace/ComfyUI/models/omnivoice
 mkdir -p /workspace/ComfyUI/models/audio_encoders
 
 if [ ! -f /workspace/ComfyUI/models/omnivoice/OmniVoice/model.safetensors ]; then
-    pip install "huggingface_hub[hf_xet]" -q
-    python -c "
+    $PIP install "huggingface_hub[hf_xet]" -q
+    $PY -c "
 from huggingface_hub import snapshot_download
 print('Downloading OmniVoice fp32...')
 snapshot_download('k2-fsa/OmniVoice', local_dir='/workspace/ComfyUI/models/omnivoice/OmniVoice')
@@ -134,4 +132,4 @@ echo "=========================================="
 echo ""
 
 cd /workspace/ComfyUI
-python main.py --listen --disable-auto-launch --verbose DEBUG --log-stdout
+$PY main.py --listen --disable-auto-launch --verbose DEBUG --log-stdout
