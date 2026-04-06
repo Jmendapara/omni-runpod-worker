@@ -1,12 +1,12 @@
-ARG BASE_IMAGE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
+ARG BASE_IMAGE=nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04
 
 # Stage 1: Base image with common dependencies
 FROM ${BASE_IMAGE} AS base
 
 ARG COMFYUI_VERSION=latest
 ARG CUDA_VERSION_FOR_COMFY
-ARG ENABLE_PYTORCH_UPGRADE=false
-ARG PYTORCH_INDEX_URL
+ARG ENABLE_PYTORCH_UPGRADE=true
+ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu128
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_PREFER_BINARY=1
@@ -101,7 +101,7 @@ CMD ["/start.sh"]
 FROM base AS downloader
 
 ARG HUGGINGFACE_ACCESS_TOKEN
-ARG MODEL_TYPE=omnivoice-bf16
+ARG MODEL_TYPE=omnivoice-fp32
 
 WORKDIR /comfyui
 

@@ -11,7 +11,7 @@ set -euo pipefail
 #   curl -fsSL https://raw.githubusercontent.com/Jmendapara/omni-runpod-worker/main/scripts/build-on-pod.sh | bash
 # =============================================================================
 
-MODEL_TYPE="${MODEL_TYPE:-omnivoice-bf16}"
+MODEL_TYPE="${MODEL_TYPE:-omnivoice-fp32}"
 COMFYUI_VERSION="${COMFYUI_VERSION:-latest}"
 REPO_URL="${REPO_URL:-https://github.com/Jmendapara/omni-runpod-worker.git}"
 BRANCH="${BRANCH:-main}"

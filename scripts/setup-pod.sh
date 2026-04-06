@@ -44,8 +44,21 @@ else
     $PIP install -r requirements.txt -q
 fi
 
-echo "  Verifying torch after ComfyUI install..."
-$PY -c "import torch; print(f'  torch {torch.__version__}, CUDA: {torch.cuda.is_available()}')" 2>/dev/null || echo "  WARNING: torch still not available"
+echo "  Ensuring PyTorch has CUDA 12.8 support (required for RTX 50xx / Blackwell)..."
+NEEDS_UPGRADE=$($PY -c "
+import torch
+cc = torch.version.cuda or ''
+major_minor = tuple(int(x) for x in cc.split('.')[:2]) if cc else (0,0)
+print('yes' if major_minor < (12,8) else 'no')
+" 2>/dev/null || echo "yes")
+
+if [ "$NEEDS_UPGRADE" = "yes" ]; then
+    echo "  Upgrading PyTorch to cu128..."
+    $PIP install --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 -q
+fi
+
+echo "  Verifying torch after install..."
+$PY -c "import torch; print(f'  torch {torch.__version__}, CUDA available: {torch.cuda.is_available()}')" 2>/dev/null || echo "  WARNING: torch still not available"
 
 # ---------- Step 3: Install OmniVoice custom node ----------
 echo ""

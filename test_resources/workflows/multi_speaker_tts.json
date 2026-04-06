@@ -1,0 +1,67 @@
+{
+  "input": {
+    "images": [
+      {
+        "name": "speaker1_voice.wav",
+        "image": "data:audio/wav;base64,PUT_SPEAKER1_BASE64_HERE"
+      },
+      {
+        "name": "speaker2_voice.wav",
+        "image": "data:audio/wav;base64,PUT_SPEAKER2_BASE64_HERE"
+      }
+    ],
+    "workflow": {
+      "1": {
+        "inputs": {
+          "audio": "speaker1_voice.wav",
+          "upload": "image"
+        },
+        "class_type": "LoadAudio",
+        "_meta": { "title": "Load Speaker 1 Audio" }
+      },
+      "2": {
+        "inputs": {
+          "audio": "speaker2_voice.wav",
+          "upload": "image"
+        },
+        "class_type": "LoadAudio",
+        "_meta": { "title": "Load Speaker 2 Audio" }
+      },
+      "3": {
+        "inputs": {
+          "model": "OmniVoice",
+          "text": "[Speaker_1]: Welcome to the podcast! Today we have a special guest.\n[Speaker_2]: Thanks for having me, it's great to be here.\n[Speaker_1]: So tell us about your latest project.",
+          "num_speakers": 2,
+          "steps": 32,
+          "guidance_scale": 2.0,
+          "t_shift": 0.1,
+          "speed": 1.0,
+          "pause_between_speakers": 0.3,
+          "device": "auto",
+          "dtype": "auto",
+          "attention": "auto",
+          "position_temperature": 5.0,
+          "class_temperature": 0.0,
+          "layer_penalty_factor": 5.0,
+          "denoise": true,
+          "preprocess_prompt": true,
+          "postprocess_output": true,
+          "seed": 42,
+          "keep_model_loaded": true,
+          "num_speakers.speaker_1_audio": ["1", 0],
+          "num_speakers.speaker_2_audio": ["2", 0]
+        },
+        "class_type": "OmniVoiceMultiSpeakerTTS",
+        "_meta": { "title": "OmniVoice Multi-Speaker TTS" }
+      },
+      "4": {
+        "inputs": {
+          "filename_prefix": "ComfyUI_MultiSpeaker",
+          "audio": ["3", 0]
+        },
+        "class_type": "SaveAudio",
+        "_meta": { "title": "Save Audio" }
+      }
+    }
+  }
+}

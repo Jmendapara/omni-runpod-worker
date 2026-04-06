@@ -4,8 +4,8 @@
       "1": {
         "inputs": {
           "model": "OmniVoice",
-          "text": "Hello! Welcome to the OmniVoice text-to-speech demonstration. This is running on RunPod as a serverless worker.",
-          "ref_text": "",
+          "text": "Good morning everyone. Today we'll be discussing the future of artificial intelligence.",
+          "voice_instruct": "female, young, high pitch, british accent",
           "steps": 32,
           "guidance_scale": 2.0,
           "t_shift": 0.1,
@@ -15,30 +15,23 @@
           "dtype": "auto",
           "attention": "auto",
           "seed": 42,
-          "words_per_chunk": 100,
           "position_temperature": 5.0,
           "class_temperature": 0.0,
           "layer_penalty_factor": 5.0,
           "denoise": true,
-          "preprocess_prompt": true,
           "postprocess_output": true,
-          "keep_model_loaded": true,
-          "instruct": ""
+          "keep_model_loaded": true
         },
-        "class_type": "OmniVoiceLongformTTS",
-        "_meta": {
-          "title": "OmniVoice Longform TTS"
-        }
+        "class_type": "OmniVoiceVoiceDesignTTS",
+        "_meta": { "title": "OmniVoice Voice Design TTS" }
       },
       "2": {
         "inputs": {
-          "filename_prefix": "ComfyUI_OmniVoice",
+          "filename_prefix": "ComfyUI_VoiceDesign",
           "audio": ["1", 0]
         },
         "class_type": "SaveAudio",
-        "_meta": {
-          "title": "Save Audio"
-        }
+        "_meta": { "title": "Save Audio" }
       }
     }
   }

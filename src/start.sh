@@ -127,7 +127,9 @@ fi
 
 # ---------- Background monitor: kill handler if ComfyUI loop dies ----------
 (
-    wait "${COMFY_LOOP_PID}" 2>/dev/null
+    while kill -0 "${COMFY_LOOP_PID}" 2>/dev/null; do
+        sleep 5
+    done
     echo "worker-comfyui: ComfyUI restart loop exited — terminating handler process."
     kill $$ 2>/dev/null || true
 ) &

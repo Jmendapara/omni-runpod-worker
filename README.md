@@ -160,56 +160,25 @@ curl -X POST \
   https://api.runpod.ai/v2/<endpoint_id>/runsync
 ```
 
-### Voice Cloning
+### Example Workflows
 
-To clone a voice, include reference audio in the `images` array (the upload endpoint accepts any file type) and reference it in your workflow:
+Complete example workflows are in [`test_resources/workflows/`](./test_resources/workflows/):
 
-```json
-{
-  "input": {
-    "images": [
-      {
-        "name": "reference_voice.wav",
-        "image": "data:audio/wav;base64,UklGRi..."
-      }
-    ],
-    "workflow": {
-      "1": {
-        "inputs": {
-          "model": "OmniVoice-bf16",
-          "text": "Hello in a cloned voice!",
-          "ref_text": "",
-          "steps": 32,
-          "guidance_scale": 2.0,
-          "speed": 1.0,
-          "device": "auto",
-          "dtype": "auto",
-          "seed": 42,
-          "keep_model_loaded": true
-        },
-        "class_type": "OmniVoiceCloneTTS",
-        "_meta": { "title": "OmniVoice Voice Clone TTS" }
-      },
-      "2": {
-        "inputs": {
-          "image": "reference_voice.wav",
-          "upload": "image"
-        },
-        "class_type": "LoadImage",
-        "_meta": { "title": "Load Reference Audio" }
-      },
-      "3": {
-        "inputs": {
-          "filename_prefix": "ComfyUI_OmniVoice",
-          "audio": ["1", 0]
-        },
-        "class_type": "SaveAudio",
-        "_meta": { "title": "Save Audio" }
-      }
-    }
-  }
-}
+| Workflow | File | Description |
+|---|---|---|
+| **Longform TTS** | [`longform_tts.json`](test_resources/workflows/longform_tts.json) | Basic text-to-speech with smart chunking for long content |
+| **Voice Clone** | [`voice_clone_tts.json`](test_resources/workflows/voice_clone_tts.json) | Clone a voice from 3-15s reference audio |
+| **Voice Design** | [`voice_design_tts.json`](test_resources/workflows/voice_design_tts.json) | Create a voice from text description (e.g. "female, young, british accent") |
+| **Multi-Speaker** | [`multi_speaker_tts.json`](test_resources/workflows/multi_speaker_tts.json) | Dialogue between multiple speakers with `[Speaker_N]:` tags |
+| **Clone + Whisper** | [`voice_clone_with_whisper.json`](test_resources/workflows/voice_clone_with_whisper.json) | Voice cloning with pre-loaded Whisper for auto-transcription |
+
+For voice cloning and multi-speaker workflows, replace the placeholder base64 strings with your actual reference audio. To encode a WAV file:
+
+```bash
+base64 -i reference_voice.wav | tr -d '\n'
 ```
+
+**Model name:** Use `"OmniVoice"` if built with `MODEL_TYPE=omnivoice-fp32`, or `"OmniVoice-bf16"` if built with `MODEL_TYPE=omnivoice-bf16`.
 
 ## Getting the Workflow JSON
 
