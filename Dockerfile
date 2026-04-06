@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04
+ARG BASE_IMAGE=nvidia/cuda:12.8.0-cudnn-runtime-ubuntu24.04
 
 # Stage 1: Base image with common dependencies
 FROM ${BASE_IMAGE} AS base
@@ -68,9 +68,11 @@ RUN chmod +x /usr/local/bin/comfy-node-install
 
 ENV PIP_NO_INPUT=1
 
-# Install ComfyUI-OmniVoice-TTS custom node
+# Install ComfyUI-OmniVoice-TTS custom node via git clone (most reliable)
 WORKDIR /comfyui
-RUN comfy-node-install https://github.com/Saganaki22/ComfyUI-OmniVoice-TTS
+RUN git clone --depth 1 https://github.com/Saganaki22/ComfyUI-OmniVoice-TTS.git /comfyui/custom_nodes/ComfyUI-OmniVoice-TTS && \
+    ls /comfyui/custom_nodes/ComfyUI-OmniVoice-TTS/__init__.py && \
+    echo "OmniVoice node installed OK"
 
 # Install OmniVoice dependencies carefully to avoid breaking PyTorch
 RUN /opt/venv/bin/pip install omnivoice --no-deps && \
@@ -87,8 +89,14 @@ RUN /opt/venv/bin/pip install omnivoice --no-deps && \
     "transformers>=5.3.0" && \
     rm -rf /root/.cache/pip /root/.cache/uv /tmp/*
 
-# Verify critical packages are importable
-RUN /opt/venv/bin/python -c "from PIL import Image; import torch; import omnivoice; print('Verification OK: PIL, torch, omnivoice all importable')"
+# Verify critical packages and node are importable
+RUN /opt/venv/bin/python -c "\
+from PIL import Image; import torch; import omnivoice; \
+import importlib, sys; sys.path.insert(0, '/comfyui/custom_nodes/ComfyUI-OmniVoice-TTS'); \
+print('Verification OK: PIL, torch, omnivoice all importable'); \
+print(f'  torch={torch.__version__}, CUDA={torch.version.cuda}'); \
+print(f'  omnivoice={omnivoice.__version__}'); \
+"
 
 WORKDIR /
 
