@@ -62,7 +62,7 @@ fi
 echo ""
 echo "[4/7] Installing OmniVoice Python dependencies..."
 $PIP install omnivoice --no-deps -q
-$PIP install pydub soundfile scipy lazy_loader librosa sentencepiece jieba soxr -q
+$PIP install pydub soundfile scipy lazy_loader librosa sentencepiece jieba soxr accelerate -q
 $PIP install "transformers>=5.3.0" -q
 echo "  Done."
 

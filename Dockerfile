@@ -75,6 +75,7 @@ RUN comfy-node-install https://github.com/Saganaki22/ComfyUI-OmniVoice-TTS
 # Install OmniVoice dependencies carefully to avoid breaking PyTorch
 RUN /opt/venv/bin/pip install omnivoice --no-deps && \
     /opt/venv/bin/pip install \
+    accelerate \
     pydub \
     soundfile \
     scipy \
