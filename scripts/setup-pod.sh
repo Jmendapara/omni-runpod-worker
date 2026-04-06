@@ -4,27 +4,28 @@ set -euo pipefail
 # =============================================================================
 # Interactive setup script for debugging OmniVoice on a RunPod pod.
 #
-# Prerequisites: Use a RunPod GPU pod with a PyTorch template
-#                (e.g. runpod/pytorch:2.8.0-py3.12-cuda12.8.0-cudnn-devel-ubuntu24.04)
-#
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/Jmendapara/omni-runpod-worker/main/scripts/setup-pod.sh | bash
-#
-# Or clone and run:
-#   git clone https://github.com/Jmendapara/omni-runpod-worker.git /workspace/omni-runpod-worker
-#   bash /workspace/omni-runpod-worker/scripts/setup-pod.sh
 # =============================================================================
 
 echo "=========================================="
 echo "  OmniVoice RunPod Setup Script"
 echo "=========================================="
 
+# Ensure 'python' command exists
+if ! command -v python &>/dev/null; then
+    if command -v python3 &>/dev/null; then
+        ln -sf "$(which python3)" /usr/local/bin/python
+        echo "Created python -> python3 symlink"
+    fi
+fi
+
 # ---------- Step 0: System info ----------
 echo ""
 echo "[0/7] System info..."
 nvidia-smi --query-gpu=gpu_name,memory.total,driver_version --format=csv,noheader 2>/dev/null || echo "  (no GPU detected)"
-python --version 2>/dev/null || python3 --version 2>/dev/null || echo "  (no python)"
-echo "  torch: $(python -c 'import torch; print(torch.__version__, "CUDA:", torch.cuda.is_available())' 2>/dev/null || echo 'not available')"
+python --version 2>/dev/null || echo "  (no python)"
+python -c "import torch; print(f'  torch {torch.__version__}, CUDA: {torch.cuda.is_available()}')" 2>/dev/null || echo "  torch: not yet installed"
 
 # ---------- Step 1: Install system deps ----------
 echo ""
@@ -45,9 +46,13 @@ else
     cd /workspace/ComfyUI
 fi
 
+echo "  Verifying torch after ComfyUI install..."
+python -c "import torch; print(f'  torch {torch.__version__}, CUDA: {torch.cuda.is_available()}')" 2>/dev/null || echo "  WARNING: torch still not available"
+
 # ---------- Step 3: Install OmniVoice custom node ----------
 echo ""
 echo "[3/7] Installing ComfyUI-OmniVoice-TTS custom node..."
+mkdir -p /workspace/ComfyUI/custom_nodes
 cd /workspace/ComfyUI/custom_nodes
 if [ ! -d ComfyUI-OmniVoice-TTS ]; then
     git clone https://github.com/Saganaki22/ComfyUI-OmniVoice-TTS.git
@@ -68,13 +73,13 @@ echo ""
 echo "[5/7] Verifying packages..."
 python -c "
 import sys
-print(f'Python: {sys.executable}')
+print(f'Python: {sys.executable} ({sys.version})')
 checks = {
     'torch': lambda: __import__('torch').__version__,
     'torch.cuda': lambda: str(__import__('torch').cuda.is_available()),
     'PIL (Pillow)': lambda: __import__('PIL').__version__,
     'transformers': lambda: __import__('transformers').__version__,
-    'omnivoice': lambda: __import__('omnivoice').__version__ if hasattr(__import__('omnivoice'), '__version__') else 'installed',
+    'omnivoice': lambda: getattr(__import__('omnivoice'), '__version__', 'installed'),
     'torchaudio': lambda: __import__('torchaudio').__version__,
     'librosa': lambda: __import__('librosa').__version__,
     'soxr': lambda: __import__('soxr').__version__,
@@ -91,7 +96,7 @@ for name, check in checks.items():
 
 # ---------- Step 6: Download model ----------
 echo ""
-echo "[6/7] Downloading OmniVoice model (fp32 from k2-fsa)..."
+echo "[6/7] Downloading OmniVoice model..."
 mkdir -p /workspace/ComfyUI/models/omnivoice
 mkdir -p /workspace/ComfyUI/models/audio_encoders
 
@@ -113,8 +118,8 @@ fi
 
 echo ""
 echo "  Models:"
-ls -la /workspace/ComfyUI/models/omnivoice/
-ls -la /workspace/ComfyUI/models/audio_encoders/
+ls -la /workspace/ComfyUI/models/omnivoice/ 2>/dev/null || echo "  (empty)"
+ls -la /workspace/ComfyUI/models/audio_encoders/ 2>/dev/null || echo "  (empty)"
 
 # ---------- Step 7: Start ComfyUI ----------
 echo ""
@@ -122,13 +127,8 @@ echo "[7/7] Starting ComfyUI..."
 echo ""
 echo "=========================================="
 echo "  ComfyUI will start on port 8188"
-echo "  Access via: https://<pod-id>-8188.proxy.runpod.net"
 echo ""
-echo "  To test from another terminal:"
-echo "    cd /workspace/omni-runpod-worker"
-echo "    python handler.py  # starts the RunPod handler"
-echo ""
-echo "  Or test ComfyUI API directly:"
+echo "  To test the API from another terminal:"
 echo "    curl http://127.0.0.1:8188/"
 echo "=========================================="
 echo ""
