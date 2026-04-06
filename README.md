@@ -205,9 +205,10 @@ base64 -i reference_voice.wav | tr -d '\n'
 | `COMFY_LOG_LEVEL` | `DEBUG` | ComfyUI log verbosity |
 | `SERVE_API_LOCALLY` | `false` | Enable local API for development |
 | `NETWORK_VOLUME_DEBUG` | `false` | Enable network volume diagnostics |
-| `BUCKET_ENDPOINT_URL` | - | S3 endpoint for file upload |
-| `BUCKET_ACCESS_KEY_ID` | - | S3 access key |
-| `BUCKET_SECRET_ACCESS_KEY` | - | S3 secret key |
+| `BUCKET_ENDPOINT_URL` | - | S3/R2 endpoint for file upload |
+| `BUCKET_ACCESS_KEY_ID` | - | S3/R2 access key |
+| `BUCKET_SECRET_ACCESS_KEY` | - | S3/R2 secret key |
+| `BUCKET_NAME` | month-year | S3/R2 bucket name (required for Cloudflare R2) |
 | `COMFY_ORG_API_KEY` | - | Default Comfy.org API key |
 | `WEBSOCKET_RECONNECT_ATTEMPTS` | `5` | WebSocket reconnection attempts |
 | `WEBSOCKET_RECONNECT_DELAY_S` | `3` | Delay between reconnection attempts |

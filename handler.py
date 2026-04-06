@@ -478,8 +478,9 @@ def _process_output_file(filename, subfolder, file_type, job_id, output_list, er
                     f"worker-comfyui - Wrote file bytes to temporary file: {temp_file_path}"
                 )
 
-                print(f"worker-comfyui - Uploading {filename} to S3...")
-                s3_url = rp_upload.upload_image(job_id, temp_file_path)
+                bucket_name = os.environ.get("BUCKET_NAME")
+                print(f"worker-comfyui - Uploading {filename} to S3 (bucket={bucket_name or 'default'})...")
+                s3_url = rp_upload.upload_image(job_id, temp_file_path, bucket_name=bucket_name)
                 os.remove(temp_file_path)
                 print(f"worker-comfyui - Uploaded {filename} to S3: {s3_url}")
                 output_list.append(
